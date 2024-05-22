@@ -46,7 +46,7 @@ public:
     nh("~"),
     hz(1.0),
     do_loop(false),
-    hwmon_root("/sys/class/hwmon/"),
+    hwmon_root("/sys/devices/virtual/thermal"),
     hwmon_num(0)
     {
         try
@@ -59,11 +59,16 @@ public:
 
             for (auto&& hwmons : fs::directory_iterator(hwmon_root))
             {
+                if (hwmons.path().filename().string().find("thermal_zone") == std::string::npos) { continue; }
+
                 std::string name;
-                fs::path dev_name_path(hwmons.path() / "name");
-                if (fs::exists(dev_name_path))
+                fs::path dev_name_path(hwmons.path() / "type");
+                fs::path dev_temp_path(hwmons.path() / "temp");
+
+                if (fs::exists(dev_name_path) && fs::exists(dev_temp_path))
                 {
                     Util::readSingleLine(dev_name_path.generic_string(), &name);
+                    ROS_INFO_STREAM(hwmons.path().string() << " : " << name);
                 }
                 else
                 {
@@ -71,35 +76,12 @@ public:
                     return;
                 }
 
-                std::string label_fname;
+                name = std::regex_replace(name, std::regex(R"(\W)"), "_");
 
-                for (auto&& p : fs::directory_iterator(hwmons.path()))
-                {
-                    std::string input_fname(p.path().filename().generic_string());
-                    int input_num;
-                    std::string dev_name(name);
-                    temp_dev dev;
-
-                    if (qi::parse(
-                        input_fname.cbegin(),
-                        input_fname.cend(),
-                        (
-                        qi::lit("temp") >> +qi::int_[bp::ref(input_num) = qi::_1] >> qi::lit("_input")
-                        ))) // NOLINT
-                    {
-                        label_fname = "temp" + std::to_string(input_num) + "_label";
-                        fs::path label_path(hwmons.path() / label_fname);
-                        if (fs::exists(label_path))
-                        {
-                            std::string label;
-                            Util::readSingleLine(label_path.generic_string(), &label);
-                            dev_name += "/" + std::regex_replace(label, std::regex(R"(\W)"), "_");
-                        }
-                        dev.temp_file = p.path();
-                        dev.pub_temp = nh.advertise<std_msgs::Float32>(dev_name, 1);
-                        temps.push_back(dev);
-                    }
-                }
+                temp_dev dev;
+                dev.temp_file = dev_temp_path;
+                dev.pub_temp = nh.advertise<std_msgs::Float32>(name, 1);
+                temps.push_back(dev);
             }
         }
         catch (const fs::filesystem_error &ex)
