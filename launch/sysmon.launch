@@ -3,8 +3,9 @@
     <arg name="hz" default="1.0" />
     
     <group ns="sysmon">
-        <node pkg="sysmon_ros" type="cpumon" name="cpumon">
+        <node pkg="sysmon_ros" type="cpumon" name="cpumon" output="screen">
             <param name="hz" value="$(arg hz)"/>
+            <!-- <rosparam file="$(find sysmon_ros)/config/cpumon.yaml" /> -->
         </node>
         <node pkg="sysmon_ros" type="memmon" name="memmon">
             <param name="hz" value="$(arg hz)"/>
