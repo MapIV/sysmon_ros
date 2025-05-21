@@ -5,7 +5,7 @@
     <group ns="sysmon">
         <node pkg="sysmon_ros" type="cpumon" name="cpumon">
             <param name="hz" value="$(arg hz)"/>
-            <!-- <rosparam file="$(find sysmon_ros)/config/cpumon.yaml" /> -->
+            <!-- <rosparam comamand="load"　file="$(find sysmon_ros)/config/cpumon.yaml" /> -->
         </node>
         <node pkg="sysmon_ros" type="memmon" name="memmon">
             <param name="hz" value="$(arg hz)"/>
