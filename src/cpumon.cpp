@@ -36,7 +36,10 @@ public:
     cpun(0)
     {
         nh.getParam("hz", hz);
+        if (!nh.getParam("cpu_max_blacklist", cpu_max_blacklist)) 
+            cpu_max_blacklist.clear();
         struct stat f_stat;
+        pub_usage_max = nh.advertise<std_msgs::Float32>("cpu_max",10);
         if (stat(proc_name.c_str(), &f_stat) == 0)
         {
             do_loop = true;
@@ -78,6 +81,8 @@ public:
 
             std::string str;
             int32_t line(0);
+            std_msgs::Float32 usage_max;
+            usage_max.data = 0;
             while (Util::readSingleLine(proc_name, &str, line++))
             {
                 int32_t total, worker;
@@ -88,12 +93,14 @@ public:
                     usage.data = static_cast<float>(worker - workers_prev[name])
                                     / static_cast<float>(total - totals_prev[name])
                                     * 100.;
+                    if((usage_max.data < usage.data) && (std::find(cpu_max_blacklist.begin(), cpu_max_blacklist.end(), name) == cpu_max_blacklist.end()))
+                        usage_max.data = usage.data;
                     pub_usages[name].publish(usage);
                     workers_prev[name] = worker;
                     totals_prev[name] = total;
                 }
             }
-
+            pub_usage_max.publish(usage_max);
             rate.sleep();
         }
     }
@@ -131,12 +138,14 @@ private:
 
     ros::NodeHandle nh;
     std::map<std::string, ros::Publisher> pub_usages;
+    ros::Publisher pub_usage_max;
     std::map<std::string, int32_t> totals_prev;
     std::map<std::string, int32_t> workers_prev;
     double hz;
     bool do_loop;
     int32_t cpun;
     const std::string proc_name;
+    std::vector<std::string> cpu_max_blacklist;
 };
 }   // namespace Sysmon
 

@@ -1,0 +1,3 @@
+# cpu_max_blacklist:
+  # - "cpu18"
+  # - "cpu19"
