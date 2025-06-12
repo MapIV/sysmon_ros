@@ -6,6 +6,10 @@
         <node pkg="sysmon_ros" type="cpumon" name="cpumon">
             <param name="hz" value="$(arg hz)"/>
         </node>
+        <node pkg="sysmon_ros" type="jetson_gpumon" name="gpumon">
+            <param name="hz" value="$(arg hz)"/>
+            <param name="igpu_path" value="/sys/class/devfreq"/>
+        </node>
         <node pkg="sysmon_ros" type="memmon" name="memmon">
             <param name="hz" value="$(arg hz)"/>
         </node>
