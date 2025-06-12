@@ -8,7 +8,7 @@ import rospy
 from std_msgs.msg import Float32
 
 
-def read_gpuload(e):
+def read_gpuload():
     for gpu in gpu_loads:
         if os.access(gpu['path'], os.R_OK):
             with open(gpu['path'], 'r') as f:
@@ -19,34 +19,38 @@ def read_gpuload(e):
             rospy.logerr(f"Cannot read load! {gpu['path']}")
 
 
-def main():
-    global IGPU_PATH
-    global CHECK_INTERVAL
+if __name__ == '__main__':
     global gpu_loads
 
     rospy.init_node('jetson_gpumon', anonymous=False)
 
-    IGPU_PATH      = Path(rospy.get_param('~igpu_path', ''))
-    CHECK_INTERVAL = 5
+    HZ        = float(rospy.get_param('~hz', ''))
+    IGPU_PATH = Path(rospy.get_param('~igpu_path', ''))
     
+    jetson_gpu = ['gv11b', 'gp10b', 'ga10b', 'gpu']
     gpu_loads = []
     for item in IGPU_PATH.iterdir():
-        print(item)
-        if item not in ['gv11b', 'gp10b', 'ga10b', 'gpu']:
+        matched = False
+        for gpuname in jetson_gpu:
+            if gpuname in str(item):
+                matched = True
+        if not matched:
             continue
 
         gpu_load = item / "device/load"
-        print(gpu_load)
         if not gpu_load.exists() and not gpu_load.is_file():
             continue
 
-        topicname = item.name.replace('.', '_')
-        gpu_pub   = rospy.Publisher(topicname, Float32, queue_size=10)
+        topicname = item.name.strip().replace('.', '_')
+        gpu_pub   = rospy.Publisher(f"gpumon/{topicname}", Float32, queue_size=10)
         gpu_loads.append({'path': gpu_load, 'pub': gpu_pub})
+        rospy.loginfo(f"GPU Added: {gpu_load}")
 
     if len(gpu_loads) == 0:
         rospy.logerr("GPU Device Not Found!")
         exit(1)
 
-    rospy.Timer(rospy.Duration(CHECK_INTERVAL), read_gpuload)
-    rospy.spin()
+    r = rospy.Rate(HZ)
+    while not rospy.is_shutdown():
+        read_gpuload()
+        r.sleep()
