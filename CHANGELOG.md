@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v1.0a
 
-## Changed
+### Changed
 - tempmonにて、Jetsonデバイスで温度が取得できるように調整<br>
   確認済：AGX Xavier, AGX ORIN
 
