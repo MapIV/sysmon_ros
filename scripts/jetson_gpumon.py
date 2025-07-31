@@ -38,7 +38,7 @@ if __name__ == '__main__':
             continue
 
         gpu_load = item / "device/load"
-        if not gpu_load.exists() and not gpu_load.is_file():
+        if not gpu_load.exists() or not gpu_load.is_file():
             continue
 
         topicname = item.name.strip().replace('.', '_')
