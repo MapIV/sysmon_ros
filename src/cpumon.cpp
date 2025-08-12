@@ -83,6 +83,8 @@ public:
 
             std::string str;
             int32_t line(0);
+            std_msgs::Float32 usage_max;
+            usage_max.data = 0.0;
             while (Util::readSingleLine(proc_name, &str, line++))
             {
                 int32_t total, worker;
