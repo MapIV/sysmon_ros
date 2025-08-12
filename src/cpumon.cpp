@@ -95,7 +95,7 @@ public:
                     usage.data = static_cast<float>(worker - workers_prev[name])
                                     / static_cast<float>(total - totals_prev[name])
                                     * 100.;
-                        if((usage_max.data < usage.data) && (std::find(cpu_max_blacklist.begin(), cpu_max_blacklist.end(), name) == cpu_max_blacklist.end()))
+                    if((usage_max.data < usage.data) && (std::find(cpu_max_blacklist.begin(), cpu_max_blacklist.end(), name) == cpu_max_blacklist.end()))
                         usage_max.data = usage.data;
                     pub_usages[name].publish(usage);
                     workers_prev[name] = worker;
